@@ -1,0 +1,14 @@
+<html>
+<head>
+	<title></title>
+	<script type="text/javascript" src="class_lib.js"></script>
+</head>
+<body style='background-color: white;'>
+	<div id="environment"></div>
+	<script type="text/javascript">
+	var field=new Field(500);
+	field.draw_particles("environment", 11);
+	setInterval("field.render()", 40);
+	</script>
+</body>
+</html>
