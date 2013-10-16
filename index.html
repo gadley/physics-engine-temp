@@ -4,10 +4,11 @@
 	<script type="text/javascript" src="class_lib.js"></script>
 </head>
 <body style='background-color: white;'>
-	<div id="environment"></div>
+	<canvas id="environment" width='1050' height="600"></canvas>
+	<!-- <div>The average Temperature is: </div> -->
 	<script type="text/javascript">
-	var field=new Field(500);
-	field.draw_particles("environment", 11);
+	var field=new Field(600);
+	field.draw_particles(6);
 	setInterval("field.render()", 40);
 	</script>
 </body>

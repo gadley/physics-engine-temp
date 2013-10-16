@@ -2,46 +2,48 @@
 
 function Particle(name)
 {
-
+	this.theCanvas = document.getElementById('environment');
+  	this.context = this.theCanvas.getContext("2d");
 	this.name=name;
-	this.x=Math.random()*961;
-	this.y=Math.random()*600;
+	this.radius=5;
+	this.x=Math.floor(Math.random()*this.theCanvas.width);
+	this.y=Math.floor(Math.random()*this.theCanvas.height);
 	this.vector_y;
 	this.vector_x;
-	this.range_y =function(number)
-	{
-		// if ((number>600)||(number<1))
-		if (number>600)
-			this.vector_y=this.vector_y*-1;
-		if (number<1)
-			this.vector_y=this.vector_y*-1;
-		return number;
-	}	
-	this.range_x =function(number)
-	{
-		if (number>1050)
-			this.vector_x=this.vector_x*-1;
-		if (number<1)
-			this.vector_x=this.vector_x*-1;
-		return number;
-	}
-	this.draw=function(selector)
-	{
-		var target=document.getElementById(selector);
-		target.innerHTML=target.innerHTML +"<div id='circle_"+this.name+"' style= 'position:absolute; top:"+this.y+"px; left:"+this.x+"px; background-color: black; border-radius:10px; width:10px; height:10px;'></div>";
 
+	this.testWalls =function()
+	{
+		if (this.next_x>this.theCanvas.width)
+		{
+			this.vector_x=this.vector_x*-1;
+			this.next_x=this.theCanvas.width-this.radius;
+		}	
+		else if (this.next_x<1)
+		{
+			this.vector_x=this.vector_x*-1;
+			this.next_x=this.radius;
+		}	
+		else if (this.next_y>this.theCanvas.height)
+		{
+			this.vector_y=this.vector_y*-1;
+			this.next_y=this.theCanvas.height-this.radius;
+		}	
+		else if (this.next_y<1)
+		{
+			this.vector_y=this.vector_y*-1;
+			this.next_y=this.radius;
+		}	
 		return this;
 	}
-
-	this.redraw = function()
+	this.draw=function()
 	{
-		var target = document.getElementById('circle_'+this.name);
-		target.style.left=this.x+"px";
-		target.style.top=this.y+"px";
-		// target.innerHTML="<div style= 'position:absolute; top:"+this.y+"px; left:"+this.x+"px; border: 1px solid black; border-radius:10px; width:10px; height:10px;'></div>";
+		this.context.fillStyle = "#000000";
+      	this.context.beginPath();
+      	this.context.arc(this.x, this.y, this.radius, 0, Math.PI *2);
+      	this.context.closePath();
+      	this.context.fill();
 		return this;
 	}
-
 	this.temperature=function(number)
 	{
 		var change_x=(Math.random()-.5)*number;
@@ -51,18 +53,24 @@ function Particle(name)
 		return this;
 	}
 
-	this.move=function(delta_x, delta_y)
+	this.move=function()
 	{
-		// this.particles[i].nextMove(this.particles[i].vector_x, this.particles[i].vector_y);
-		// if this
-		this.x=this.range_x(this.x + delta_x);
-		this.y=this.range_y(this.y + delta_y);
+		this.next_x=(this.x+this.vector_x);
+		this.next_y=(this.y+this.vector_y)
 		return this;
 	}
-	this.nextMove=function(delta_x, delta_y)
+	this.update=function()
 	{
-		this.xx=this.x + delta_x;
-		this.yy=this.y + delta_y;
+		this.x=this.next_x;
+		this.y=this.next_y;
+		return this;
+	}
+	this.collisionMove=function(vector_x, vector_y)
+	{
+		this.next_x+=vector_x;
+		this.next_y+=vector_y;
+		this.vector_x=vector_x;
+		this.vector_y=vector_y;
 		return this;
 	}
 }
@@ -70,94 +78,123 @@ function Particle(name)
 function Field(total_particles)
 {
 	this.total_particles=total_particles;
+	
 	this.particles=new Array();
+	var y = new Particle(0);
+	this.particles.push(y);
+	var index=1;
+	while(this.particles.length < this.total_particles) //this will make 100 things that satisfy our needs
+	{
+		
+		var x = new Particle(index);  //make a new random particle
 
-	for (var i = 0; i <total_particles; i++) 
-	{
-		this.particles[i]=new Particle(i);
-	}
-	this.draw_particles=function(selector, number)
-	{
-		for (var i = 0; i < this.particles.length; i++) 
+		var count = this.particles.length; //this is how we iterate through this.particles
+		var buffer = 0;  //required distance gap
+		for( var i = 0; i < count; i ++)  //homemade in_array function 
 		{
-			this.particles[i].draw(selector).temperature(number);
-			// for (var j = 0; j < i; j++) 
-			// {
-			// 	this.dx=this.particles[i].xx - this.particles[j].xx;
-			// 				this.dy=this.particles[i].yy - this.particles[j].yy;
-			// 				this.distance=(this.dx*this.dx+this.dy*this.dy);
-			// }
-		}
-		return this;
-	}
-	// this.drawCollision=function()
-	// {
-
-	// }
-	this.collision=function()
-	{	
-
-		for (var i = 0; i < total_particles; i++) 
-		{	
-			this.particles[i].nextMove(this.particles[i].vector_x, this.particles[i].vector_y);
-			if (!((this.particles[i].xx>1040)||(this.particles[i].xx<10)||(this.particles[i].yy>590)||(this.particles[i].yy<10)))
+			var dx=this.particles[i].x - x.x;
+			var dy=this.particles[i].y - x.y;
+			var distance=(dx*dx+dy*dy);
+			// console.log(distance);
+			if(distance < (100 +100)) //this will be the check
 			{
-				for (var j = 0; j < total_particles; j++) 
-				{
-					this.particles[j].nextMove(this.particles[j].vector_x, this.particles[j].vector_y);
-					if(i!=j)
-					{
-						if (!((this.particles[j].xx>1040)||(this.particles[j].xx<10)||(this.particles[j].yy>590)||(this.particles[j].yy<10)))	
-						{
-							this.dx=this.particles[i].xx - this.particles[j].xx;
-							this.dy=this.particles[i].yy - this.particles[j].yy;
-							this.distance=(this.dx*this.dx+this.dy*this.dy);
-							// if (((this.particles[i].x > this.particles[j].x-10) && (this.particles[i].x < this.particles[j].x+10)) && ((this.particles[i].y > this.particles[j].y-10) && (this.particles[i].y < this.particles[j].y+10)))
-							if(this.distance<=(100))
-							{
-								this.collisionAngle=Math.atan2(this.dx, this.dy);
-								this.speedi=Math.sqrt(this.particles[i].vector_x*this.particles[i].vector_x+this.particles[i].vector_y*this.particles[i].vector_y);
-								this.speedj=Math.sqrt(this.particles[j].vector_x*this.particles[j].vector_x+this.particles[j].vector_y*this.particles[j].vector_y);
-								this.directioni = Math.atan2(this.particles[i].vector_y, this.particles[i].vector_x);
-								this.directionj = Math.atan2(this.particles[j].vector_y, this.particles[j].vector_x);
-								this.rotatedVelocityXi = this.speedi * Math.cos(this.directioni - this.collisionAngle);
-						        this.rotatedVelocityYi = this.speedi * Math.sin(this.directioni - this.collisionAngle);
-					  	        this.rotatedVelocityXj = this.speedj * Math.cos(this.directionj - this.collisionAngle);
-						        this.rotatedVelocityYj = this.speedj * Math.sin(this.directionj - this.collisionAngle);
-						        this.mass=1;
-		           				this.finalVelocityXi = ((this.mass - this.mass) * this.rotatedVelocityXi + (this.mass + this.mass) * this.rotatedVelocityXj) / (this.mass + this.mass);
-		      					this.finalVelocityXj = ((this.mass + this.mass) * this.rotatedVelocityXi + (this.mass - this.mass) * this.rotatedVelocityXj) / (this.mass + this.mass);
-		      					this.finalVelocityYi = this.rotatedVelocityYi;
-		    					this.finalVelocityYj = this.rotatedVelocityYj;
-		    					this.i_delta_x = Math.cos(this.collisionAngle) * this.finalVelocityXi + Math.cos(this.collisionAngle + Math.PI/2) * this.finalVelocityYi;
-							    this.i_delta_y = Math.sin(this.collisionAngle) * this.finalVelocityXi + Math.sin(this.collisionAngle + Math.PI/2) * this.finalVelocityYi;
-							    this.j_delta_x= Math.cos(this.collisionAngle) * this.finalVelocityXj + Math.cos(this.collisionAngle + Math.PI/2) * this.finalVelocityYj;
-							    this.j_delta_y = Math.sin(this.collisionAngle) * this.finalVelocityXj + Math.sin(this.collisionAngle + Math.PI/2) * this.finalVelocityYj;
-								// this.dist=Math.sqrt(this.dx*this.dx+this.dy*this.dy);
-								// this.displace=(this.dist - 10)/2
-								// this.i_delta_x=this.particles[i].vector_x+Math.cos(this.collisionAngle)*this.displace;
-								// this.i_delta_y=this.particles[i].vector_y+Math.sin(this.collisionAngle)*this.displace;
-								// this.j_delta_x=this.particles[j].vector_x-Math.cos(this.collisionAngle)*this.displace;
-								// this.j_delta_y=this.particles[j].vector_x-Math.sin(this.collisionAngle)*this.displace;
-								this.particles[i].move(this.i_delta_x, this.i_delta_y).redraw();
-								this.particles[j].move(this.j_delta_x, this.j_delta_y).redraw();
-								// console.log("Particle ", this.particles[i].y, " hit particle ", this.particles[j].y);
-							}
-						}	
-					}
-				}	
+				buffer ++;
 			}
 		}
-		return this;
+		if(buffer < 1) //meaning the conditions have been satisfied, no overlap
+			{	
+				index++;
+				this.particles.push(x);
+			}
 	}
-	this.render=function()
+	this.draw_particles=function(number)
 	{	
-		this.collision();
 		for (var i = 0; i < this.particles.length; i++) 
-		{	
-			this.particles[i].move(this.particles[i].vector_x, this.particles[i].vector_y).redraw();
+		{
+			this.particles[i].draw().temperature(number)
 		}	
 		return this;
 	}
+	this.resetField=function()
+	{
+		this.colliding_particles=new Array();
+		this.theCanvas = document.getElementById('environment');
+  		this.context = this.theCanvas.getContext("2d");
+		this.context.fillStyle = "#EEEEEE";
+    	this.context.fillRect(0, 0, 1050, 600);
+	}
+
+	this.collision=function()
+	{	
+		for (var j = 0; j < this.particles.length; j++) 
+		{	
+			for (var i = 0; i < total_particles; i++) 
+			{	
+				this.particles[i].collide=false;
+				if(i!=j)
+				{
+					var dx=this.particles[j].next_x - this.particles[i].next_x;
+					var dy=this.particles[j].next_y - this.particles[i].next_y;
+					var distance=(dx*dx+dy*dy);
+					if(distance<=100)
+					{
+						var xVelocity= this.particles[i].vector_x -this.particles[j].vector_x;
+						var yVelocity= this.particles[i].vector_y -this.particles[j].vector_y;
+						var dotProduct = dx*xVelocity +dy*yVelocity;
+						if (dotProduct>0)
+						{	
+							var collisionAngle=Math.atan2(dy, dx);
+							var speedi=Math.sqrt(this.particles[i].vector_x*this.particles[i].vector_x+this.particles[i].vector_y*this.particles[i].vector_y);
+							var speedj=Math.sqrt(this.particles[j].vector_x*this.particles[j].vector_x+this.particles[j].vector_y*this.particles[j].vector_y);
+							var directioni = Math.atan2(this.particles[i].vector_y, this.particles[i].vector_x);
+							var directionj = Math.atan2(this.particles[j].vector_y, this.particles[j].vector_x);
+							var rotatedVelocityXi = speedi * Math.cos(directioni - collisionAngle);
+					        var rotatedVelocityYi = speedi * Math.sin(directioni - collisionAngle);
+						    var rotatedVelocityXj = speedj * Math.cos(directionj - collisionAngle);
+					        var rotatedVelocityYj = speedj * Math.sin(directionj - collisionAngle);
+					        var mass=5;
+							var finalVelocityXi = ((mass - mass) * rotatedVelocityXi + (mass + mass) * rotatedVelocityXj) / (mass + mass);
+							var finalVelocityXj = ((mass + mass) * rotatedVelocityXi + (mass - mass) * rotatedVelocityXj) / (mass + mass);
+							var finalVelocityYi = rotatedVelocityYi;
+							var finalVelocityYj = rotatedVelocityYj;
+							var i_delta_x = Math.cos(collisionAngle) * finalVelocityXi + Math.cos(collisionAngle + Math.PI/2) * finalVelocityYi;
+						    var i_delta_y = Math.sin(collisionAngle) * finalVelocityXi + Math.sin(collisionAngle + Math.PI/2) * finalVelocityYi;
+						    var j_delta_x= Math.cos(collisionAngle) * finalVelocityXj + Math.cos(collisionAngle + Math.PI/2) * finalVelocityYj;
+						    var j_delta_y = Math.sin(collisionAngle) * finalVelocityXj + Math.sin(collisionAngle + Math.PI/2) * finalVelocityYj;
+						    this.particles[i].collide=true;
+							this.colliding_particles.push({id:i, collide_vector_x:i_delta_x, collide_vector_y:i_delta_y });
+						}
+					}
+				}
+			}	
+		}
+	}
+	this.render=function()
+	{	
+		this.resetField();
+		var speed=0;
+		for (var i = 0; i < total_particles; i++) 
+		{
+			this.particles[i].move();
+			speed +=this.particles[i].vector_y*this.particles[i].vector_y+this.particles[i].vector_x*this.particles[i].vector_x;
+			this.particles[i].testWalls();
+		}
+		var averageSpeed=speed/total_particles;
+		// console.log(averageSpeed);
+		this.collision();
+		for (var p = 0; p < total_particles; p++) 
+		{	
+			if(this.particles[p].collide==false)
+			{
+				this.particles[p].update().draw();
+			}	
+
+		}	
+		for (var k = 0; k < this.colliding_particles.length; k++) 
+		{
+			this.particles[this.colliding_particles[k].id].collisionMove(this.colliding_particles[k].collide_vector_x, this.colliding_particles[k].collide_vector_y).update().draw();
+		}
+
+	}
 }
-//when a particle collides with another have a random 
+//add a collision variable for each particle. if true then run collision stuff. If false then just go to draw
