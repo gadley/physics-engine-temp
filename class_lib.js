@@ -10,6 +10,7 @@ function Particle(name)
 	this.y=Math.floor(Math.random()*this.theCanvas.height);
 	this.vector_y;
 	this.vector_x;
+	this.speed;
 
 	this.testWalls =function()
 	{
@@ -37,7 +38,8 @@ function Particle(name)
 	}
 	this.draw=function()
 	{
-		this.context.fillStyle = "#000000";
+		var color =Math.floor(this.speed*31);
+		this.context.fillStyle = "rgb("+color+",0,"+color+")";
       	this.context.beginPath();
       	this.context.arc(this.x, this.y, this.radius, 0, Math.PI *2);
       	this.context.closePath();
@@ -120,8 +122,8 @@ function Field(total_particles)
 		this.colliding_particles=new Array();
 		this.theCanvas = document.getElementById('environment');
   		this.context = this.theCanvas.getContext("2d");
-		this.context.fillStyle = "#EEEEEE";
-    	this.context.fillRect(0, 0, 1050, 600);
+		this.context.fillStyle = "#E0E0E0";
+    	this.context.fillRect(0, 0, this.theCanvas.width, this.theCanvas.height);
 	}
 
 	this.collision=function()
@@ -161,6 +163,7 @@ function Field(total_particles)
 						    var i_delta_y = Math.sin(collisionAngle) * finalVelocityXi + Math.sin(collisionAngle + Math.PI/2) * finalVelocityYi;
 						    var j_delta_x= Math.cos(collisionAngle) * finalVelocityXj + Math.cos(collisionAngle + Math.PI/2) * finalVelocityYj;
 						    var j_delta_y = Math.sin(collisionAngle) * finalVelocityXj + Math.sin(collisionAngle + Math.PI/2) * finalVelocityYj;
+						    this.particles[i].speed=this.particles[i].vector_y*this.particles[i].vector_y+this.particles[i].vector_x*this.particles[i].vector_x;
 						    this.particles[i].collide=true;
 							this.colliding_particles.push({id:i, collide_vector_x:i_delta_x, collide_vector_y:i_delta_y });
 						}
@@ -172,20 +175,21 @@ function Field(total_particles)
 	this.render=function()
 	{	
 		this.resetField();
-		var speed=0;
+		var averageSpeed=0;
 		for (var i = 0; i < total_particles; i++) 
 		{
 			this.particles[i].move();
-			speed +=this.particles[i].vector_y*this.particles[i].vector_y+this.particles[i].vector_x*this.particles[i].vector_x;
+			averageSpeed +=this.particles[i].vector_y*this.particles[i].vector_y+this.particles[i].vector_x*this.particles[i].vector_x;
 			this.particles[i].testWalls();
 		}
-		var averageSpeed=speed/total_particles;
+		averageSpeed=averageSpeed/total_particles;
 		// console.log(averageSpeed);
 		this.collision();
 		for (var p = 0; p < total_particles; p++) 
 		{	
 			if(this.particles[p].collide==false)
 			{
+				this.particles[p].speed=this.particles[p].vector_y*this.particles[p].vector_y+this.particles[p].vector_x*this.particles[p].vector_x;
 				this.particles[p].update().draw();
 			}	
 
@@ -197,4 +201,5 @@ function Field(total_particles)
 
 	}
 }
+
 //add a collision variable for each particle. if true then run collision stuff. If false then just go to draw

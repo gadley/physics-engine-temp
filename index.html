@@ -8,8 +8,27 @@
 	<!-- <div>The average Temperature is: </div> -->
 	<script type="text/javascript">
 	var field=new Field(600);
-	field.draw_particles(6);
-	setInterval("field.render()", 40);
+	field.draw_particles(5);
+	// shim layer with setTimeout fallback
+window.requestAnimFrame = (function(){
+  return  window.requestAnimationFrame       ||
+          window.webkitRequestAnimationFrame ||
+          window.mozRequestAnimationFrame    ||
+          function( callback ){
+            window.setTimeout(callback, 1000 / 30);
+          };
+})();
+
+
+// usage:
+// instead of setInterval(render, 16) ....
+
+(function animloop(){
+  requestAnimFrame(animloop);
+  field.render();
+})();
+// place the rAF *before* the render() to assure as close to
+// 60fps with the setTimeout fallback.
 	</script>
 </body>
 </html>
