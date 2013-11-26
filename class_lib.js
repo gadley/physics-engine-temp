@@ -1,5 +1,6 @@
 
-
+upArrow=false;
+downArrow=false;
 function Particle(name)
 {
 	this.theCanvas = document.getElementById('environment');
@@ -11,8 +12,9 @@ function Particle(name)
 	this.vector_y;
 	this.vector_x;
 	this.speed;
+}
 
-	this.testWalls =function()
+	Particle.prototype.testWalls =function()
 	{
 		if (this.next_x>this.theCanvas.width)
 		{
@@ -24,19 +26,36 @@ function Particle(name)
 			this.vector_x=this.vector_x*-1;
 			this.next_x=this.radius;
 		}	
-		else if (this.next_y>this.theCanvas.height)
+		if ((this.next_y>(this.theCanvas.height-25))&&(downArrow)&&(this.vector_y<0))
 		{
-			this.vector_y=this.vector_y*-1;
+			console.log("downArrow");
+			console.log("first "+this.vector_y);
+			this.vector_y=this.vector_y*-.8;
+			console.log("last "+this.vector_y);
 			this.next_y=this.theCanvas.height-this.radius;
 		}	
-		else if (this.next_y<1)
+		if (this.next_y>this.theCanvas.height)
+		{
+			if (upArrow)
+			{
+				console.log("upArrow")
+				this.vector_y=this.vector_y*-1.2;
+				this.next_y=this.theCanvas.height-this.radius;
+			}
+			else
+			{
+				this.vector_y=this.vector_y*-1;
+				this.next_y=this.theCanvas.height-this.radius;	
+			}	
+		}	
+		if (this.next_y<1)
 		{
 			this.vector_y=this.vector_y*-1;
 			this.next_y=this.radius;
 		}	
 		return this;
 	}
-	this.draw=function()
+	Particle.prototype.draw=function()
 	{
 		var color =Math.floor(this.speed*31);
 		this.context.fillStyle = "rgb("+color+",0,"+color+")";
@@ -46,7 +65,7 @@ function Particle(name)
       	this.context.fill();
 		return this;
 	}
-	this.temperature=function(number)
+	Particle.prototype.temperature=function(number)
 	{
 		var change_x=(Math.random()-.5)*number;
 		var change_y=(Math.random()-.5)*number;
@@ -55,19 +74,19 @@ function Particle(name)
 		return this;
 	}
 
-	this.move=function()
+	Particle.prototype.move=function()
 	{
 		this.next_x=(this.x+this.vector_x);
 		this.next_y=(this.y+this.vector_y)
 		return this;
 	}
-	this.update=function()
+	Particle.prototype.update=function()
 	{
 		this.x=this.next_x;
 		this.y=this.next_y;
 		return this;
 	}
-	this.collisionMove=function(vector_x, vector_y)
+	Particle.prototype.collisionMove=function(vector_x, vector_y)
 	{
 		this.next_x+=vector_x;
 		this.next_y+=vector_y;
@@ -75,12 +94,12 @@ function Particle(name)
 		this.vector_y=vector_y;
 		return this;
 	}
-}
 
 function Field(total_particles)
 {
 	this.total_particles=total_particles;
-	
+	this.upArrow=false;
+	this.downArrow=false;
 	this.particles=new Array();
 	var y = new Particle(0);
 	this.particles.push(y);
@@ -138,7 +157,7 @@ function Field(total_particles)
 					var dx=this.particles[j].next_x - this.particles[i].next_x;
 					var dy=this.particles[j].next_y - this.particles[i].next_y;
 					var distance=(dx*dx+dy*dy);
-					if(distance<=100)
+					if(distance<=(this.particles[j].radius + this.particles[i].radius) * (this.particles[j].radius + this.particles[i].radius))
 					{
 						var xVelocity= this.particles[i].vector_x -this.particles[j].vector_x;
 						var yVelocity= this.particles[i].vector_y -this.particles[j].vector_y;
@@ -174,6 +193,8 @@ function Field(total_particles)
 	}
 	this.render=function()
 	{	
+		// var start = new Date().getTime();
+		// console.log("first" + upArrow);
 		this.resetField();
 		var averageSpeed=0;
 		for (var i = 0; i < total_particles; i++) 
@@ -192,14 +213,39 @@ function Field(total_particles)
 				this.particles[p].speed=this.particles[p].vector_y*this.particles[p].vector_y+this.particles[p].vector_x*this.particles[p].vector_x;
 				this.particles[p].update().draw();
 			}	
-
 		}	
 		for (var k = 0; k < this.colliding_particles.length; k++) 
 		{
 			this.particles[this.colliding_particles[k].id].collisionMove(this.colliding_particles[k].collide_vector_x, this.colliding_particles[k].collide_vector_y).update().draw();
 		}
-
+		upArrow=false;
+		downArrow=false;
+		// var end = new Date().getTime();
+		// var time = end - start;
+		var fps=document.getElementById('fps');
+		fps.innerHTML="The average Temperature is: " + Math.floor(averageSpeed*10);
+		var progress=document.getElementById('bar');
+		var colors =Math.floor(averageSpeed*40);
+		progress.style.height=Math.floor(((averageSpeed*10)/60)*100)+"%";
+		console.log(progress.style.height);
+		progress.style.backgroundColor ="rgb("+colors+",0,0)";
+	}
+	 this.checkKey=function(e) {
+	 	target=document.getElementById("environment");
+	 	this.theCanvas = document.getElementById('environment');
+  		this.context = this.theCanvas.getContext("2d");
+	    e = e || window.event;
+	    var volume=this.theCanvas.height;
+	    if (e.keyCode == '38') {
+	    	upArrow=true;
+	    	target.height=volume-10;
+	    	// up arrow
+	       
+	    }
+	    else if (e.keyCode == '40') {
+	    	downArrow=true;
+	    	target.height=volume+10;
+	    	// down arrow
+	    }
 	}
 }
-
-//add a collision variable for each particle. if true then run collision stuff. If false then just go to draw
